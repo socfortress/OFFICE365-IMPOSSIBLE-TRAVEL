@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Query
 from loguru import logger
+from schema.impossible_travel import GraylogAnalyzeResponse
 from schema.impossible_travel import ImpossibleTravelResult
 from schema.impossible_travel import PurgeResponse
 from services.database import get_database_service
@@ -12,7 +13,7 @@ from services.impossible_travel import get_impossible_travel_detector
 analyze_router = APIRouter()
 
 
-@analyze_router.get("/analyze", response_model=ImpossibleTravelResult)
+@analyze_router.get("/analyze", response_model=GraylogAnalyzeResponse)
 async def analyze_login(
     query: str = Query(..., description="Query string with user, ip, and ts parameters")
 ):
@@ -20,6 +21,10 @@ async def analyze_login(
     Analyze a login attempt for impossible travel detection.
 
     Query format: user=email@domain.com|ip=1.2.3.4|ts=2025-12-10T10:17:54
+
+    Returns a Graylog-compatible response:
+    - Single value JSONPath: $.success
+    - Multi value JSONPath: $.result
 
     Example:
     /analyze?query=user%3Dtest%40socfortress.com%7Cip%3D102.78.106.220%7Cts%3D2025-12-10T10%3A17%3A54
@@ -69,7 +74,8 @@ async def analyze_login(
         else:
             logger.info(f"No impossible travel detected: {result.message}")
 
-        return result
+        # Wrap result for Graylog JSONPATH compatibility
+        return GraylogAnalyzeResponse(success=True, result=result)
 
     except HTTPException:
         raise

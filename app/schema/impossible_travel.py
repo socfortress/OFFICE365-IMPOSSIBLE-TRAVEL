@@ -34,6 +34,13 @@ class ImpossibleTravelResult(BaseModel):
     message: str
 
 
+class GraylogAnalyzeResponse(BaseModel):
+    """Graylog-compatible response wrapper for JSONPATH lookup data adapter"""
+
+    success: bool  # Single value JSONPath: $.success
+    result: ImpossibleTravelResult  # Multi value JSONPath: $.result
+
+
 class PurgeResponse(BaseModel):
     """Response for database purge operation"""
 
