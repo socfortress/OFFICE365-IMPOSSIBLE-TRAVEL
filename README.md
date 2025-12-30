@@ -50,16 +50,28 @@ services:
     container_name: impossible-travel-detection
     restart: unless-stopped
     ports:
-      - "80:80"  # Change to 8000:80 if port 80 is in use
+      - "80:80"  # Change left side to 8000:80 if port 80 is in use
     environment:
+      # Time window in minutes for impossible travel detection
       - IMPOSSIBLE_TRAVEL_TIME_WINDOW=${IMPOSSIBLE_TRAVEL_TIME_WINDOW:-5}
+
+      # Maximum number of login records to keep per user
       - MAX_RECORDS_PER_USER=${MAX_RECORDS_PER_USER:-10}
+
+      # Minimum distance in km to consider as different location (within same country)
       - MIN_DISTANCE_KM=${MIN_DISTANCE_KM:-100}
+
+      # Database path (inside container)
       - DATABASE_PATH=/opt/copilot/app/data/impossible_travel.db
+
+      # API Configuration
       - API_HOST=0.0.0.0
       - API_PORT=80
+
+      # Log Level
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
+      # Persist SQLite database
       - ./data:/opt/copilot/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
@@ -67,6 +79,16 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - impossible-travel-net
+
+networks:
+  impossible-travel-net:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
 ```
 
 3. Create a `.env` file (optional - for custom settings):
