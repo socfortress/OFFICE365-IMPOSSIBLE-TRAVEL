@@ -44,6 +44,41 @@ Send a GET request with user, IP, and timestamp:
 curl "http://localhost/analyze?query=user%3Dtest%40socfortress.com%7Cip%3D102.78.106.220%7Cts%3D2025-12-10T10%3A17%3A54"
 ```
 
+### Graylog Pipeline Rule
+
+```
+rule "impossible_travel_office365_api_lookup"
+when
+  has_field("data_office365_UserId") &&
+  has_field("data_office365_ActorIpAddress") &&
+  has_field("data_office365_CreationTime")
+then
+  // Extract required values
+  let user_id = to_string($message.data_office365_UserId);
+  let ip     = to_string($message.data_office365_ActorIpAddress);
+  let ts      = to_string($message.data_office365_CreationTime);
+
+  /*
+    Build a single lookup key.
+    Your FastAPI service will parse this.
+    Example received by API:
+      user=user@example.com|ip=1.1.1.1|ts=2025-12-10T10:17:54
+  */
+  let query = concat("user=", user_id);
+  let query = concat(query, "|ip=");
+  let query = concat(query, ip);
+  let query = concat(query, "|ts=");
+  let query = concat(query, ts);
+
+  // Call the lookup table backed by the HTTP data adapter
+  let result = lookup("impossible_travel_api", query);
+
+  // Store the raw response for inspection / debugging
+  set_field("impossible_travel_result", result);
+
+end
+```
+
 ### Test with the Test Script
 
 Run the included test script:
