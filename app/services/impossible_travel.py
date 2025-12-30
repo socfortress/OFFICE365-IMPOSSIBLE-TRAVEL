@@ -4,11 +4,8 @@ from typing import Optional
 
 from geopy.distance import geodesic
 from loguru import logger
-
-from schema.impossible_travel import (
-    ImpossibleTravelResult,
-    LocationInfo,
-)
+from schema.impossible_travel import ImpossibleTravelResult
+from schema.impossible_travel import LocationInfo
 from services.database import get_database_service
 from services.geolocation import get_geolocation_service
 
@@ -17,16 +14,10 @@ class ImpossibleTravelDetector:
     """Service for detecting impossible travel based on login patterns"""
 
     def __init__(self):
-        self.time_window_minutes = int(
-            os.getenv("IMPOSSIBLE_TRAVEL_TIME_WINDOW", "5")
-        )
-        self.max_records_per_user = int(
-            os.getenv("MAX_RECORDS_PER_USER", "10")
-        )
+        self.time_window_minutes = int(os.getenv("IMPOSSIBLE_TRAVEL_TIME_WINDOW", "5"))
+        self.max_records_per_user = int(os.getenv("MAX_RECORDS_PER_USER", "10"))
         # Minimum distance in km to consider for impossible travel detection
-        self.min_distance_km = float(
-            os.getenv("MIN_DISTANCE_KM", "100")
-        )
+        self.min_distance_km = float(os.getenv("MIN_DISTANCE_KM", "100"))
 
     async def analyze(
         self, user: str, ip: str, timestamp_str: str
@@ -141,8 +132,8 @@ class ImpossibleTravelDetector:
             # Check if within time window and from different location
             within_time_window = time_diff_minutes <= self.time_window_minutes
             different_location = (
-                last_login["country"] != current_location.country or
-                distance_km >= self.min_distance_km
+                last_login["country"] != current_location.country
+                or distance_km >= self.min_distance_km
             )
             is_impossible = within_time_window and different_location
 

@@ -1,9 +1,11 @@
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Query
 from loguru import logger
-
-from schema.impossible_travel import ImpossibleTravelResult, PurgeResponse
+from schema.impossible_travel import ImpossibleTravelResult
+from schema.impossible_travel import PurgeResponse
 from services.database import get_database_service
 from services.impossible_travel import get_impossible_travel_detector
 
@@ -53,7 +55,7 @@ async def analyze_login(
             raise HTTPException(
                 status_code=400,
                 detail=f"Missing required parameters: {', '.join(missing)}. "
-                f"Expected format: user=email|ip=1.2.3.4|ts=2025-12-10T10:17:54"
+                f"Expected format: user=email|ip=1.2.3.4|ts=2025-12-10T10:17:54",
             )
 
         logger.info(f"Analyzing login for user={user}, ip={ip}, ts={ts}")
@@ -73,10 +75,7 @@ async def analyze_login(
         raise
     except Exception as e:
         logger.error(f"Error processing analyze request: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @analyze_router.post("/purge", response_model=PurgeResponse)
@@ -96,13 +95,12 @@ async def purge_database():
         return PurgeResponse(
             success=True,
             message=f"Successfully purged {records_deleted} records from database",
-            records_deleted=records_deleted
+            records_deleted=records_deleted,
         )
     except Exception as e:
         logger.error(f"Error purging database: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to purge database: {str(e)}"
+            status_code=500, detail=f"Failed to purge database: {str(e)}"
         )
 
 
@@ -117,7 +115,4 @@ async def get_stats():
         return stats
     except Exception as e:
         logger.error(f"Error getting stats: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")

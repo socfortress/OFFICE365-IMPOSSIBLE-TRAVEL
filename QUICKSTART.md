@@ -1,38 +1,43 @@
 # Quick Start Guide
 
 ## Overview
+
 This FastAPI application detects impossible travel by analyzing login patterns. When a user logs in from different countries or distant locations within a short time window (e.g., USA then Canada 5 minutes later), the system flags it as impossible travel.
 
 ## Installation & Setup
 
 1. **Install Dependencies**
-   ```bash
-   cd app
-   pip install -r requirements.txt
-   ```
+
+    ```bash
+    cd app
+    pip install -r requirements.txt
+    ```
 
 2. **Configure Settings**
-   ```bash
-   # Copy the example environment file
-   cp .env.example .env
 
-   # Edit .env to customize settings
-   # - IMPOSSIBLE_TRAVEL_TIME_WINDOW: Time window in minutes (default: 5)
-   # - MAX_RECORDS_PER_USER: Number of records to keep per user (default: 10)
-   # - MIN_DISTANCE_KM: Minimum distance in km for same country (default: 100)
-   ```
+    ```bash
+    # Copy the example environment file
+    cp .env.example .env
+
+    # Edit .env to customize settings
+    # - IMPOSSIBLE_TRAVEL_TIME_WINDOW: Time window in minutes (default: 5)
+    # - MAX_RECORDS_PER_USER: Number of records to keep per user (default: 10)
+    # - MIN_DISTANCE_KM: Minimum distance in km for same country (default: 100)
+    ```
 
 3. **Start the Server**
-   ```bash
-   cd app
-   python module.py
-   ```
 
-   The API will start on http://localhost:80
+    ```bash
+    cd app
+    python module.py
+    ```
+
+    The API will start on http://localhost:80
 
 ## Usage
 
 ### Analyze a Login
+
 Send a GET request with user, IP, and timestamp:
 
 ```bash
@@ -40,6 +45,7 @@ curl "http://localhost/analyze?query=user%3Dtest%40socfortress.com%7Cip%3D102.78
 ```
 
 ### Test with the Test Script
+
 Run the included test script:
 
 ```bash
@@ -54,6 +60,7 @@ python test_api.py test user@example.com 8.8.8.8 2025-12-10T10:00:00
 ```
 
 ### View API Documentation
+
 Open http://localhost/docs in your browser for interactive API documentation.
 
 ## How It Works
@@ -67,35 +74,36 @@ Open http://localhost/docs in your browser for interactive API documentation.
 7. **Store**: Saves login and maintains rolling history
 
 **Example**: User logs in from USA → 5 minutes later → logs in from Canada = Impossible Travel
-- ✅ Automatic IP geolocation
-- ✅ Detects logins from different countries within time window
-- ✅ Configurable time windows and distance thresholds
-- ✅ SQLite database for login history
-- ✅ Auto-cleanup of old records
-- ✅ REST API with full documentation
-- ✅ Easy Graylog integration
+
+-   ✅ Automatic IP geolocation
+-   ✅ Detects logins from different countries within time window
+-   ✅ Configurable time windows and distance thresholds
+-   ✅ SQLite database for login history
+-   ✅ Auto-cleanup of old records
+-   ✅ REST API with full documentation
+-   ✅ Easy Graylog integration
 
 ## Configuration Parameters
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| IMPOSSIBLE_TRAVEL_TIME_WINDOW | 5 | Time window in minutes - logins from different locations within this window are flagged |
-| MAX_RECORDS_PER_USER | 10 | Number of login records to keep per user |
-| MIN_DISTANCE_KM | 100 | Minimum distance in km between locations (same country). Different countries always trigger detection. |
-| DATABASE_PATH | ./data/impossible_travel.db | Path to SQLite database |
-| API_HOST | 0.0.0.0 | Server host binding |
-| API_PORT | 80 | Server port |
-| LOG_LEVEL | INFO | Logging level |
+| Parameter                     | Default                     | Description                                                                                            |
+| ----------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| IMPOSSIBLE_TRAVEL_TIME_WINDOW | 5                           | Time window in minutes - logins from different locations within this window are flagged                |
+| MAX_RECORDS_PER_USER          | 10                          | Number of login records to keep per user                                                               |
+| MIN_DISTANCE_KM               | 100                         | Minimum distance in km between locations (same country). Different countries always trigger detection. |
+| DATABASE_PATH                 | ./data/impossible_travel.db | Path to SQLite database                                                                                |
+| API_HOST                      | 0.0.0.0                     | Server host binding                                                                                    |
+| API_PORT                      | 80                          | Server port                                                                                            |
+| LOG_LEVEL                     | INFO                        | Logging level                                                                                          |
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| /analyze | GET | Analyze a login for impossible travel |
-| /purge | POST | Purge all records from database |
-| /stats | GET | Get database statistics |
-| /health | GET | Health check |
-| /docs | GET | Interactive API documentation |
+| Endpoint | Method | Description                           |
+| -------- | ------ | ------------------------------------- |
+| /analyze | GET    | Analyze a login for impossible travel |
+| /purge   | POST   | Purge all records from database       |
+| /stats   | GET    | Get database statistics               |
+| /health  | GET    | Health check                          |
+| /docs    | GET    | Interactive API documentation         |
 
 ## Example Response
 
@@ -103,51 +111,55 @@ When impossible travel is detected:
 
 ```json
 {
-  "user": "test@socfortress.com",
-  "current_ip": "8.8.8.8",
-  "current_location": {
-    "country": "United States",
-    "city": "Mountain View",
-    "latitude": 37.386,
-    "longitude": -122.0838
-  },
-  "current_timestamp": "2025-12-10T10:22:54",
-  "impossible_travel_detected": true,
-  "previous_login": {
     "user": "test@socfortress.com",
-    "ip": "102.78.106.220",
-    "country": "Morocco",
-    "city": "Casablanca",
-    "latitude": 33.5731,
-    "longitude": -7.5898,
-    "timestamp": "2025-12-10T10:17:54"
-  },
-  "distance_km": 5896.42,
-  "time_difference_minutes": 5.0,
-  "message": "IMPOSSIBLE TRAVEL DETECTED: User logged in from Morocco and then from United States within 5.0 minutes (5896.42 km apart)"
+    "current_ip": "8.8.8.8",
+    "current_location": {
+        "country": "United States",
+        "city": "Mountain View",
+        "latitude": 37.386,
+        "longitude": -122.0838
+    },
+    "current_timestamp": "2025-12-10T10:22:54",
+    "impossible_travel_detected": true,
+    "previous_login": {
+        "user": "test@socfortress.com",
+        "ip": "102.78.106.220",
+        "country": "Morocco",
+        "city": "Casablanca",
+        "latitude": 33.5731,
+        "longitude": -7.5898,
+        "timestamp": "2025-12-10T10:17:54"
+    },
+    "distance_km": 5896.42,
+    "time_difference_minutes": 5.0,
+    "message": "IMPOSSIBLE TRAVEL DETECTED: User logged in from Morocco and then from United States within 5.0 minutes (5896.42 km apart)"
 }
 ```
 
 ## Graylog Integration
 
 Configure an HTTP Notification in Graylog:
-- URL: `http://your-server/analyze?query=user=${user.username}|ip=${source}|ts=${timestamp}`
-- Method: GET
+
+-   URL: `http://your-server/analyze?query=user=${user.username}|ip=${source}|ts=${timestamp}`
+-   Method: GET
 
 ## Troubleshooting
 
 **Q: Geolocation not working?**
-- Check internet connection
-- ip-api.com has a free tier limit of 45 requests/minute
+
+-   Check internet connection
+-   ip-api.com has a free tier limit of 45 requests/minute
 
 **Q: Too many false positives?**
-- Increase `IMPOSSIBLE_TRAVEL_TIME_WINDOW` (e.g., 30 minutes, 1 hour)
-- Increase `MIN_DISTANCE_KM` to only flag locations further apart
-- Consider VPN usage in your environment
+
+-   Increase `IMPOSSIBLE_TRAVEL_TIME_WINDOW` (e.g., 30 minutes, 1 hour)
+-   Increase `MIN_DISTANCE_KM` to only flag locations further apart
+-   Consider VPN usage in your environment
 
 **Q: Database issues?**
-- Ensure `data/` directory exists and is writable
-- Check file permissions on the database
+
+-   Ensure `data/` directory exists and is writable
+-   Check file permissions on the database
 
 ## Support
 

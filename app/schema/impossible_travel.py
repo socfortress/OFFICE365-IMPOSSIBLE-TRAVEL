@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -6,6 +5,7 @@ from pydantic import BaseModel
 
 class AnalyzeRequest(BaseModel):
     """Request model for the analyze endpoint"""
+
     user: str
     ip: str
     ts: str  # timestamp in ISO format
@@ -13,6 +13,7 @@ class AnalyzeRequest(BaseModel):
 
 class LocationInfo(BaseModel):
     """Location information from IP geolocation"""
+
     country: str
     city: str
     latitude: float
@@ -21,6 +22,7 @@ class LocationInfo(BaseModel):
 
 class ImpossibleTravelResult(BaseModel):
     """Result of impossible travel detection"""
+
     user: str
     current_ip: str
     current_location: LocationInfo
@@ -34,6 +36,7 @@ class ImpossibleTravelResult(BaseModel):
 
 class PurgeResponse(BaseModel):
     """Response for database purge operation"""
+
     success: bool
     message: str
     records_deleted: int

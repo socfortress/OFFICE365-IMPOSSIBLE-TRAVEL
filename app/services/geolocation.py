@@ -2,7 +2,6 @@ from typing import Optional
 
 import httpx
 from loguru import logger
-
 from schema.impossible_travel import LocationInfo
 
 
@@ -10,7 +9,9 @@ class GeolocationService:
     """Service for IP geolocation using ip-api.com (free, no API key required)"""
 
     def __init__(self):
-        self.api_url = "http://ip-api.com/json/{ip}?fields=status,message,country,city,lat,lon"
+        self.api_url = (
+            "http://ip-api.com/json/{ip}?fields=status,message,country,city,lat,lon"
+        )
 
     async def get_location(self, ip: str) -> Optional[LocationInfo]:
         """
@@ -30,7 +31,7 @@ class GeolocationService:
 
                 if data.get("status") == "fail":
                     logger.error(
-                        f"Geolocation failed for IP {ip}: {data.get('message')}"
+                        f"Geolocation failed for IP {ip}: {data.get('message')}",
                     )
                     return None
 

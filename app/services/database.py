@@ -1,7 +1,7 @@
 import os
-from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import aiosqlite
 from loguru import logger
@@ -31,14 +31,14 @@ class DatabaseService:
                     timestamp TEXT NOT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-                """
+                """,
             )
             # Create index on user for faster lookups
             await db.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_user_timestamp
                 ON login_history(user, timestamp DESC)
-                """
+                """,
             )
             await db.commit()
             logger.info(f"Database initialized at {self.db_path}")
@@ -88,16 +88,12 @@ class DatabaseService:
                     """,
                     (user, records_to_delete),
                 )
-                logger.info(
-                    f"Deleted {records_to_delete} old records for user {user}"
-                )
+                logger.info(f"Deleted {records_to_delete} old records for user {user}")
 
             await db.commit()
             logger.info(f"Added login record for user {user} from IP {ip}")
 
-    async def get_recent_logins(
-        self, user: str, limit: int = 10
-    ) -> List[dict]:
+    async def get_recent_logins(self, user: str, limit: int = 10) -> List[dict]:
         """Get recent login records for a user"""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
@@ -135,12 +131,12 @@ class DatabaseService:
         """Get database statistics"""
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute(
-                "SELECT COUNT(*) as total_records FROM login_history"
+                "SELECT COUNT(*) as total_records FROM login_history",
             )
             total = (await cursor.fetchone())[0]
 
             cursor = await db.execute(
-                "SELECT COUNT(DISTINCT user) as unique_users FROM login_history"
+                "SELECT COUNT(DISTINCT user) as unique_users FROM login_history",
             )
             unique_users = (await cursor.fetchone())[0]
 
