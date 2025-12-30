@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.black-formatter",
+    "editorconfig.editorconfig",
+    "github.vscode-github-actions",
+    "george-alison.html-preview-vscodes",
+    "esbenp.prettier-vscode",
+    "ms-vscode.remtoe-remote-wsl",
+    "njpwerner.autodocstring"
+  ]
+}

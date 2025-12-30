@@ -1,0 +1,4 @@
+fastapi
+graypy
+loguru
+uvicorn
