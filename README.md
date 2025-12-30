@@ -23,41 +23,104 @@ A FastAPI application that detects impossible travel patterns based on user logi
 
 **Example**: If a user logs in from the United States, then 5 minutes later logs in from Canada, this is flagged as impossible travel.
 
-## Installation
+## Quick Start with Docker Compose (Recommended)
 
 ### Prerequisites
 
--   Python 3.8+
--   pip
+-   Docker and Docker Compose installed
+-   That's it!
 
 ### Setup
 
-1. Clone the repository:
+1. Create a new directory for the deployment:
 
 ```bash
-cd /Users/taylor/Desktop/Repos/OFFICE365-IMPOSSIBLE-TRAVEL
+mkdir impossible-travel-detection
+cd impossible-travel-detection
 ```
 
-2. Install dependencies:
+2. Create a `docker-compose.yml` file:
 
-```bash
-cd app
-pip install -r requirements.txt
+```yaml
+version: '3.8'
+
+services:
+  impossible-travel-api:
+    image: ghcr.io/socfortress/office365-impossible-travel:latest
+    container_name: impossible-travel-detection
+    restart: unless-stopped
+    ports:
+      - "80:80"  # Change to 8000:80 if port 80 is in use
+    environment:
+      - IMPOSSIBLE_TRAVEL_TIME_WINDOW=${IMPOSSIBLE_TRAVEL_TIME_WINDOW:-5}
+      - MAX_RECORDS_PER_USER=${MAX_RECORDS_PER_USER:-10}
+      - MIN_DISTANCE_KM=${MIN_DISTANCE_KM:-100}
+      - DATABASE_PATH=/opt/copilot/app/data/impossible_travel.db
+      - API_HOST=0.0.0.0
+      - API_PORT=80
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/opt/copilot/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 ```
 
-Or use `pip-compile` for reproducible builds:
+3. Create a `.env` file (optional - for custom settings):
 
 ```bash
-pip install pip-tools
-pip-compile requirements.in
-pip install -r requirements.txt
+# Time window for impossible travel detection (in minutes)
+IMPOSSIBLE_TRAVEL_TIME_WINDOW=5
+
+# Maximum number of login records to keep per user
+MAX_RECORDS_PER_USER=10
+
+# Minimum distance in km to consider as different location (within same country)
+MIN_DISTANCE_KM=100
+
+# Log Level
+LOG_LEVEL=INFO
 ```
 
-3. Configure environment variables:
+4. Start the service:
 
 ```bash
-cp .env.example .env
-# Edit .env with your desired settings
+docker-compose up -d
+```
+
+5. Access the API:
+   - **Swagger UI**: http://localhost/docs
+   - **API Health**: http://localhost/health
+   - **Statistics**: http://localhost/stats
+
+**That's it!** The database will be created automatically in the `./data` directory.
+
+### Managing the Service
+
+**View logs:**
+```bash
+docker-compose logs -f
+```
+
+**Stop the service:**
+```bash
+docker-compose down
+```
+
+**Update to latest version:**
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
+**Reset the database:**
+```bash
+docker-compose down
+rm -rf data/
+docker-compose up -d
 ```
 
 ## Configuration
@@ -94,20 +157,31 @@ LOG_LEVEL=INFO
 -   **API_HOST/PORT**: Server binding configuration
 -   **LOG_LEVEL**: Logging verbosity (DEBUG, INFO, WARNING, ERROR)
 
-## Running the Application
+## Alternative: Running from Source
 
-### Development Mode
+If you want to develop or modify the code:
 
+1. Clone the repository:
 ```bash
-cd app
-python module.py
+git clone https://github.com/socfortress/office365-impossible-travel.git
+cd office365-impossible-travel
 ```
 
-### Production Mode (with Docker)
-
+2. Install dependencies:
 ```bash
-docker build -t impossible-travel-api ./app
-docker run -p 80:80 -v $(pwd)/data:/app/data impossible-travel-api
+cd app
+pip install -r requirements.txt
+```
+
+3. Configure environment:
+```bash
+cp ../.env.example ../.env
+# Edit .env with your settings
+```
+
+4. Run the application:
+```bash
+python module.py
 ```
 
 ## API Endpoints
@@ -245,11 +319,46 @@ http://localhost/docs
 
 To integrate with Graylog, configure an HTTP Notification with the following settings:
 
-1. **URL**: `http://your-api-server/analyze?query=user=${user.username}|ip=${source}|ts=${timestamp}`
+1. **URL**: `http://your-api-server/analyze?query=user=${key}`
 2. **Method**: GET
 3. **Headers**: None required
 
 Graylog will automatically URL-encode the parameters.
+
+### Graylog Pipeline Rule
+
+```
+rule "impossible_travel_office365_api_lookup"
+when
+  has_field("data_office365_UserId") &&
+  has_field("data_office365_ActorIpAddress") &&
+  has_field("data_office365_CreationTime")
+then
+  // Extract required values
+  let user_id = to_string($message.data_office365_UserId);
+  let ip     = to_string($message.data_office365_ActorIpAddress);
+  let ts      = to_string($message.data_office365_CreationTime);
+
+  /*
+    Build a single lookup key.
+    Your FastAPI service will parse this.
+    Example received by API:
+      user=user@example.com|ip=1.1.1.1|ts=2025-12-10T10:17:54
+  */
+  let query = concat("user=", user_id);
+  let query = concat(query, "|ip=");
+  let query = concat(query, ip);
+  let query = concat(query, "|ts=");
+  let query = concat(query, ts);
+
+  // Call the lookup table backed by the HTTP data adapter
+  let result = lookup("impossible_travel_api", query);
+
+  // Store the raw response for inspection / debugging
+  set_field("impossible_travel_result", result);
+
+end
+```
 
 ## Use Cases
 
