@@ -1,49 +1,67 @@
 import os
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
-
-# from app.datamgmt.configmanager import get_graylog_endpoint_from_config
-# from app.datamgmt.configmanager import get_log_level_from_config
 from loguru import logger
-from routes.test import test_router
+from routes.analyze import analyze_router
 
-app = FastAPI(description="Copilot-Module-Cookie", version="0.0.1")
+# Load environment variables
+load_dotenv()
 
-# ! If wanting to send to Graylog ! #
-# handler = graypy.GELFTCPHandler(
-#     get_graylog_endpoint_from_config().graylog_host,
-#     get_graylog_endpoint_from_config().graylog_port,
-# )
+app = FastAPI(
+    title="Office 365 Impossible Travel Detection API",
+    description="Detects impossible travel patterns based on user login locations and timestamps",
+    version="1.0.0",
+)
 
-# logger.add(
-#     handler,
-#     format="{time} {level} {message}",
-#     level=get_log_level_from_config().log_level,
-#     backtrace=True,
-#     catch=True,
-# )
-
-
+# Configure logging
+log_level = os.getenv("LOG_LEVEL", "INFO")
 logger.add(
-    "debug.log",
+    "impossible_travel.log",
     format="{time} {level} {message}",
-    level="INFO",
+    level=log_level,
     rotation="10 MB",
     compression="zip",
 )
 
-app.include_router(test_router)
+# Include routers
+app.include_router(analyze_router)
 
-logger.debug("Starting SOCFortress Module Application")
-logger.info(f"Cryptolens KEY: {os.getenv('CRYPTOLENS_KEY')}")
+logger.info("Office 365 Impossible Travel Detection API initialized")
+logger.info("Configuration loaded:")
+logger.info(
+    f"- Time Window: {os.getenv('IMPOSSIBLE_TRAVEL_TIME_WINDOW', '5')} minutes",
+)
+logger.info(f"- Max Records Per User: {os.getenv('MAX_RECORDS_PER_USER', '10')}")
+logger.info(
+    f"- Database Path: {os.getenv('DATABASE_PATH', './data/impossible_travel.db')}",
+)
 
 
 @app.get("/")
-def hello():
-    return {"message": "Module - We Made It!"}
+def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "Office 365 Impossible Travel Detection API",
+        "version": "1.0.0",
+        "endpoints": {
+            "analyze": "/analyze?query=user=email|ip=1.2.3.4|ts=2025-12-10T10:17:54",
+            "purge": "/purge (POST)",
+            "stats": "/stats",
+            "docs": "/docs",
+        },
+    }
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "impossible-travel-detection"}
 
 
 if __name__ == "__main__":
-    logger.info("Starting SOCFortress Module Application")
-    uvicorn.run(app, host="0.0.0.0", port=80)
+    api_host = os.getenv("API_HOST", "0.0.0.0")
+    api_port = int(os.getenv("API_PORT", "80"))
+    logger.info(f"Starting API server on {api_host}:{api_port}")
+    uvicorn.run(app, host=api_host, port=api_port)

@@ -1,55 +1,36 @@
-# build with `docker build -t python-backend -f Dockerfile.deb .`
-# run with `docker run -p 5000:5000 -d python-backend`
-# Start with the base Debian 11 image
-# looking to split into 2 containers, one for the backend and one for the frontend
-FROM debian:11
+# build with `docker build -t impossible-travel-api .`
+# run with `docker run -p 80:80 -v $(pwd)/data:/opt/copilot/app/data -d impossible-travel-api`
+# Start with Python 3.11 on Debian 12 (bookworm) slim
+FROM python:3.11-slim-bookworm
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Update the package lists
-RUN apt-get update
+# Set working directory
+WORKDIR /opt/copilot/app
 
-# Install necessary dependencies
-RUN apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
+# Install system dependencies if needed
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     curl \
-    gnupg \
-    lsb-release
+    && rm -rf /var/lib/apt/lists/*
 
-# Add the deadsnakes PPA
-RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main" | tee /etc/apt/sources.list.d/focal.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Update the package lists
-RUN apt-get update
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Install Python 3.11, pip and venv
-RUN apt-get install -y python3.11 python3-pip python3.11-venv
-
-# Create a Python virtual environment and activate it
-RUN python3.11 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Install setuptools
-RUN /opt/venv/bin/pip install setuptools
-
-# Install your application's dependencies
-WORKDIR /opt/copilot/app
-COPY requirements.txt ./
-RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
-
-# Copy your application into the Docker image
-WORKDIR /opt/copilot/app
+# Copy application code
 COPY . .
 
-ARG CRYPTOLENS_KEY
-ENV CRYPTOLENS_KEY=${CRYPTOLENS_KEY}
+# Create data directory for SQLite database
+RUN mkdir -p /opt/copilot/app/data
 
-ARG CRYPTOLENS_PRODUCT_ID
-ENV CRYPTOLENS_PRODUCT_ID=${CRYPTOLENS_PRODUCT_ID}
+# Expose port
+EXPOSE 80
 
-# Run your application
-CMD ["sh", "-c", "ls -la && /opt/venv/bin/python module.py"]
+# Run the application
+CMD ["python", "module.py"]

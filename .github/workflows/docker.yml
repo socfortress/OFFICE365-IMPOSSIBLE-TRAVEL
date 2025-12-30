@@ -27,7 +27,4 @@ jobs:
         with:
           context: ./app
           push: true
-          tags: ghcr.io/socfortress/copilot-module-test:latest
-          build-args: |
-            CRYPTOLENS_KEY=${{ secrets.CRYPTOLENS_KEY }}
-            CRYPTOLENS_PRODUCT_ID=${{ secrets.CRYPTOLENS_PRODUCT_ID }}
+          tags: ghcr.io/socfortress/office365-impossible-travel:latest

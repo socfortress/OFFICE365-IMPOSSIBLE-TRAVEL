@@ -1,4 +1,7 @@
+aiosqlite
 fastapi
-graypy
+geopy
+httpx
 loguru
+python-dotenv
 uvicorn
