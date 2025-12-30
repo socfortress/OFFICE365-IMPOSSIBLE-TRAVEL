@@ -341,7 +341,7 @@ http://localhost/docs
 
 To integrate with Graylog, configure an HTTP Notification with the following settings:
 
-1. **URL**: `http://your-api-server/analyze?query=user=${key}`
+1. **URL**: `http://your-api-server/analyze?query=${key}`
 2. **Single value JSONPath**: `$.success`
 3. **Multi value JSONPath**: `$.result`
 3. **Headers**: None required
