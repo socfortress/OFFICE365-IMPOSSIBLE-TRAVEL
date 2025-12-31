@@ -11,6 +11,10 @@ A FastAPI application that detects impossible travel patterns based on user logi
 -   🔄 **Auto-cleanup**: Automatically maintains a rolling window of login records per user
 -   📊 **Statistics**: View database stats and analytics
 
+## Video Tutorial
+
+📺 **Watch the complete tutorial walkthrough**: [Office 365 Impossible Travel Detection - Setup Guide](https://youtu.be/is1ic1Fma1I)
+
 ## How It Works
 
 1. **Receive Login Data**: API receives GET requests from Graylog (or any system) with user, IP, and timestamp
