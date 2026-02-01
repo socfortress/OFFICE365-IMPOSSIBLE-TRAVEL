@@ -341,6 +341,10 @@ Interactive API documentation (Swagger UI):
 http://localhost/docs
 ```
 
+## Wazuh Manager Integration
+
+Use Wazuh Manager to call the `/analyze` endpoint directly from Office 365 alerts. See the installation and configuration guide in `wazuh/README.md`.
+
 ## Graylog Integration
 
 To integrate with Graylog, configure an HTTP Notification with the following settings:
