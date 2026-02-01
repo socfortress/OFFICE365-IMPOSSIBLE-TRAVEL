@@ -74,6 +74,33 @@ cat alert.json | /var/ossec/integrations/office365_impossible_travel_integration
 
 On detection, the script prints a JSON summary to stdout and exits `0`. On non-detection, it also exits `0`. Errors exit non-zero and print a clear message to stderr.
 
+## What to Expect on an Impossible Travel Detection
+
+When the API flags **impossible travel**, the integration prints a **single-line JSON object** to stdout.
+
+Example output (fields may vary slightly depending on API response):
+
+```json
+{
+  "distance_km": 5896.42,
+  "impossible_travel_detected": true,
+  "ip": "8.8.8.8",
+  "message": "IMPOSSIBLE TRAVEL DETECTED: User logged in from Morocco and then from United States within 5.0 minutes (5896.42 km apart)",
+  "time_difference_minutes": 5.0,
+  "timestamp": "2025-12-10T10:22:54",
+  "user": "user@example.com"
+}
+```
+
+### Where you’ll see it
+
+- **Manual test:** You’ll see the JSON printed directly in your terminal.
+- **Wazuh Manager runtime:** Wazuh runs integrations via `wazuh-integratord` and logs execution/output. Depending on your distro/version, you’ll typically find related logs in:
+  - `/var/ossec/logs/ossec.log`
+  - `/var/ossec/logs/integrations.log` (if enabled/available)
+
+If you need this output to become a *new Wazuh alert/event* (rather than just integration output), we can extend this in a follow-up PR by having the script emit a CEF/syslog line to a local socket/file and ingest it back into Wazuh with a custom decoder/rule.
+
 ## Environment Variables
 
 - `IMPOSSIBLE_TRAVEL_API_BASE_URL` (default: `http://localhost`)
