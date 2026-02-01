@@ -4,8 +4,9 @@
 import json
 import logging
 import os
-import sys
+import socket
 import ssl
+import sys
 from typing import Any, Iterable, List, Optional
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -116,6 +117,51 @@ def build_url(base_url: str, user: str, ip: str, ts: str) -> str:
     return f"{base_url.rstrip('/')}/analyze?{urlencode(params)}"
 
 
+def build_enrichment_payload(alert: dict, result: dict) -> dict:
+    original_alert: dict = {}
+    alert_id = alert.get("id")
+    if alert_id:
+        original_alert["id"] = alert_id
+    rule = alert.get("rule") or {}
+    if isinstance(rule, dict):
+        rule_id = rule.get("id")
+        rule_groups = rule.get("groups")
+        if rule_id or rule_groups:
+            rule_payload: dict = {}
+            if rule_id:
+                rule_payload["id"] = rule_id
+            if rule_groups:
+                rule_payload["groups"] = rule_groups
+            original_alert["rule"] = rule_payload
+
+    payload = {
+        "integration": "impossible_travel",
+        "impossible_travel": result,
+    }
+    if original_alert:
+        payload["original_alert"] = original_alert
+    return payload
+
+
+def build_queue_message(alert: dict, payload: dict) -> str:
+    agent = alert.get("agent") or {}
+    agent_id = agent.get("id")
+    if not agent_id or agent_id == "000":
+        prefix = "1:impossible_travel:"
+    else:
+        agent_name = agent.get("name", "unknown")
+        agent_ip = agent.get("ip", "unknown")
+        prefix = f"1:[{agent_id}] ({agent_name}) {agent_ip}->impossible_travel:"
+    return f"{prefix}{json.dumps(payload, separators=(',', ':'))}"
+
+
+def send_to_queue_socket(message: str) -> None:
+    wazuh_path = os.getenv("WAZUH_PATH", "/var/ossec")
+    socket_path = os.path.join(wazuh_path, "queue", "sockets", "queue")
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as sock:
+        sock.sendto(message.encode("utf-8"), socket_path)
+
+
 def main() -> int:
     api_base_url = os.getenv("IMPOSSIBLE_TRAVEL_API_BASE_URL", "http://localhost")
     api_key = os.getenv("IMPOSSIBLE_TRAVEL_API_KEY")
@@ -193,6 +239,14 @@ def main() -> int:
         "distance_km": result.get("distance_km"),
         "time_difference_minutes": result.get("time_difference_minutes"),
     }
+
+    if detected:
+        try:
+            payload = build_enrichment_payload(alert, result)
+            queue_message = build_queue_message(alert, payload)
+            send_to_queue_socket(queue_message)
+        except Exception as exc:
+            logger.error("Failed to send enrichment to Wazuh queue socket: %s", exc)
 
     print(json.dumps(output, sort_keys=True))
     return 0

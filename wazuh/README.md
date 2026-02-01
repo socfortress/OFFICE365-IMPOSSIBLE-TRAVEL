@@ -99,7 +99,35 @@ Example output (fields may vary slightly depending on API response):
   - `/var/ossec/logs/ossec.log`
   - `/var/ossec/logs/integrations.log` (if enabled/available)
 
-If you need this output to become a *new Wazuh alert/event* (rather than just integration output), we can extend this in a follow-up PR by having the script emit a CEF/syslog line to a local socket/file and ingest it back into Wazuh with a custom decoder/rule.
+When the API flags **impossible travel**, the integration also **injects a new event into Wazuh** via the manager queue socket. The resulting alert has `location` set to `impossible_travel` and includes `data.integration="impossible_travel"` so it is easy to target in custom rules.
+
+Example alert shape (shortened):
+
+```json
+{
+  "location": "impossible_travel",
+  "rule": {
+    "id": "100420",
+    "description": "Impossible travel detected for user@example.com"
+  },
+  "data": {
+    "integration": "impossible_travel",
+    "impossible_travel": {
+      "impossible_travel_detected": true,
+      "user": "user@example.com",
+      "current_ip": "8.8.8.8",
+      "current_timestamp": "2025-12-10T10:22:54"
+    },
+    "original_alert": {
+      "id": "1733854974.123456",
+      "rule": {
+        "id": "92103",
+        "groups": ["office365", "authentication_failed"]
+      }
+    }
+  }
+}
+```
 
 ## Environment Variables
 
@@ -110,3 +138,7 @@ If you need this output to become a *new Wazuh alert/event* (rather than just in
 - `WAZUH_IT_IP_PATHS` (comma-separated JSON paths)
 - `WAZUH_IT_TS_PATHS` (comma-separated JSON paths)
 - `WAZUH_IT_LOG_LEVEL` (default: `INFO`)
+
+## Example Wazuh Rules
+
+See `wazuh/impossible_travel_rules.xml` for a minimal ruleset that matches the enrichment events and raises a higher-level alert when `impossible_travel_detected=true`.

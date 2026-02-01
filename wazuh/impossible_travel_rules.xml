@@ -1,0 +1,14 @@
+<group name="impossible_travel,">
+  <rule id="100420" level="3">
+    <field name="data.integration">impossible_travel</field>
+    <description>Impossible travel enrichment event for $(data.impossible_travel.user)</description>
+    <group>integration,impossible_travel,</group>
+  </rule>
+
+  <rule id="100421" level="8">
+    <if_sid>100420</if_sid>
+    <field name="data.impossible_travel.impossible_travel_detected">true</field>
+    <description>Impossible travel detected for $(data.impossible_travel.user)</description>
+    <group>integration,impossible_travel,</group>
+  </rule>
+</group>
